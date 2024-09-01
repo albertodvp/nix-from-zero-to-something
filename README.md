@@ -1,6 +1,36 @@
-Here's a completed version of your draft with the TODOs filled in and some language refinements for clarity:
+# Nix: from zero to something
+```mermaid
+graph TD
+    A[1. Nix as a Language] --> B[Key Language Features]
+    B --> C[Attribute Sets]
+    B --> D[Let Expressions]
+    B --> E[With Expressions]
+    B --> F[Import]
+    B --> G[Functions]
+    B --> H[Function Arguments with Defaults]
+    B --> I[Function Application]
 
-# Contents
+    A --> J[2. Derivation]
+    J --> K[Building a Derivation]
+    K --> L[.drv File]
+    K --> M[Circular Dependencies]
+
+    J --> S[3. Flakes]
+    S --> T[Simplest Possible Flake]
+    S --> U[More Elaborate Flake Example]
+
+    J --> N[4. Nix Store]
+    N --> O[Immutability]
+    N --> P[Accessibility]
+
+    N --> Q[5. Caches / Substituters]
+
+    Q --> R[6. NixOS]
+
+    V[7. Input Addressed vs Content Addressed] --> W[Input Addressed]
+    V --> X[Content Addressed Fixed Output]
+    J --> V
+```
 
 ## Disclaimer
 - "But I can do `x` with `y` too!"
