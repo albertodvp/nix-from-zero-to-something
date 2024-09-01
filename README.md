@@ -251,7 +251,8 @@ NixOS takes the concept of reproducibility to the entire operating system level.
 
 ![Flakes](./pics/fleyks.png)
 
-### What Are Flakes?
+
+### TODO: What Are Flakes?
 
 Flakes are an experimental feature in Nix that introduces a more structured and reliable way to manage Nix projects. They enforce purity by restricting access to paths outside the Nix store, making builds more reproducible. Flakes provide a standard way to declare dependencies and interact with them, and they are expected to become the standard in future versions of Nix.
 
@@ -345,3 +346,8 @@ In some cases, especially when downloading external sources, the content of the 
 
 - **Sandboxed Builds**: Nix builds occur in sandboxed environments, meaning they have no access to the system or the internet unless explicitly allowed (e.g., for fixed output derivations).
 - **Dependency Graph**: Tracing back the dependencies of a derivation will often lead to a fixed output derivation, which relies on content addressing.
+
+
+
+# TODO add:
+- precommit typos, markdown lint
