@@ -37,6 +37,7 @@ graph TD
 - My approach with Nix is orthodox, but partial integration is possible
 - Many personal opinions
 - I'll sacrifice some precision for better digestibility
+- This starts from a fork: https://github.com/aciceri/nixos-devops-talk
 
 # Nix
 ![The Declarative Trinity](./pics/the-declarative-trinity.webp)
