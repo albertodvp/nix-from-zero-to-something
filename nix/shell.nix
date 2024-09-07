@@ -12,8 +12,14 @@
             statix.enable = true;
             shellcheck.enable = true;
             typos.enable = true;
-            markdownlint.enable = true;
-            mdl.enable = true;
+            markdownlint = {
+              settings.configuration = {
+                MD013 = {
+                  line_length = 100;
+                };
+              };
+              enable = true;
+            };
           };
         };
       };
