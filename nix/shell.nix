@@ -17,6 +17,8 @@
                 MD013 = {
                   line_length = 100;
                 };
+                MD024 = false;
+                MD025 = false;
               };
               enable = true;
             };
@@ -24,7 +26,12 @@
         };
       };
       devShells.default = pkgs.mkShell {
-        buildInputs = config.pre-commit.settings.enabledPackages;
+        buildInputs =
+          config.pre-commit.settings.enabledPackages
+          ++ (with pkgs; [
+            pandoc
+            mermaid-filter
+          ]);
         shellHook = config.pre-commit.installationScript;
       };
       formatter = pkgs.nixfmt-rfc-style;
