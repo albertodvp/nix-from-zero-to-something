@@ -1,17 +1,13 @@
 # Nix: from zero to something
 
-![The Declarative Trinity](./pics/the-declarative-trinity.webp)
+[the declarative trinity](./pics/the-declarative-trinity.png){ width=40\% }
 
 ---
 
-TODO MERMAID GRAPHS
+TODO MERMAID GRAPHS OR TOC
 
 # Disclaimer(todo)
 
->- "But I can do `x` with `y` too!"
->- My approach with Nix is orthodox, but partial integration is possible
->- Many personal opinions
->- I'll sacrifice some precision for better digestibility
 >- This starts from a fork: <https://github.com/aciceri/nixos-devops-talk>
 
 # Nix as a Language (1/2)
@@ -72,13 +68,13 @@ They're defined using curly braces:
 
 ## Functions
 
-   Functions are defined using a colon. The syntax is `argument: body`:
+   Functions are defined using a colon. The syntax is `argument: body`
 
    ```nix
    x: x + 1  # A function that takes x and returns x + 1
    ```
 
-   Functions can also take attribute sets as arguments:
+   Functions can also take attribute sets as arguments
 
    ```nix
    { a, b }: a + b  # A function that takes an attrset with 'a' and 'b' keys
@@ -252,12 +248,14 @@ hash since different architectures may have different outputs.
 Here's an example of a simple derivation that compiles a C program:
 
 ```nix
-# hello.c
+# hello.nic
 { pkgs ? import <nixpkgs> { } }:
 pkgs.stdenv.mkDerivation {
   name = "hello";
   src = ./src;
   # TODO why don't I have to import GCC here?
+  # TODO add build inputs
+
   buildPhase = ''
     gcc $src/hello.c -o ./hello
   '';
