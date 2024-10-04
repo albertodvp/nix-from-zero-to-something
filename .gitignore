@@ -2,7 +2,4 @@ index.html
 result
 .direnv
 .pre-commit-config.yaml
-src
-simple.nix
-hello.nix
 mermaid-filter.err

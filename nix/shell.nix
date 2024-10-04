@@ -19,6 +19,7 @@
                 };
                 MD024 = false;
                 MD025 = false;
+                MD045 = false;
               };
               enable = true;
             };

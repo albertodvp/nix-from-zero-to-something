@@ -1,33 +1,55 @@
 # Nix: from zero to something
 
-[the declarative trinity](./pics/the-declarative-trinity.png){ width=40\% }
+![](./pics/the-declarative-trinity.png){ width=40\% }
 
 ---
 
-TODO MERMAID GRAPHS OR TOC
+## Table of Contents
 
-# Disclaimer(todo)
+1. Disclaimer
+2. Use Cases (to Grab Your Attention)
+3. Nix Language
+4. Derivations
+5. The Nix Store
+6. Flakes (short intro)
+7. Killer Use Cases
 
+# Disclaimer
+
+>- I'm not sure this approach/TOC works
+>- This demo is "from first principles", it might sound slow
+>- I'm not an expert
+>- If anything is not clear, please interrupt me
 >- This starts from a fork: <https://github.com/aciceri/nixos-devops-talk>
+>- Yes, you can use Nix in MacOS and WSL2: <https://nixos.org/download/>
 
-# Nix as a Language (1/2)
+# Some use cases
+
+>- Build this presentation: `nix build .\#mkPresentation`
+>- Contribute on projects without polluting system with project-specific tooling: [awesome-italia-opensource](https://github.com/albertodvp/awesome-italia-opensource?tab=readme-ov-file)
+>- [Nixos configuration](https://github.com/albertodvp/nixos-dotfiles)
+
+# Nix as a Language (1/3)
 
 >- **declarative**: There is no notion of executing sequential steps.
 Dependencies between operations are established only through data.
 >- **pure**: Values cannot change during computation.
 Functions always produce the same output if their input does not change.
+
+## Nix as a Language (2/3)
+
 >- **functional**: Functions are like any other value.
 Functions can be assigned to names, taken as arguments, or returned by functions.
-
-## Nix as a Language (2/2)
-
 >- **lazy**: Values are only computed when they are needed.
+
+## Nix as a Language (3/3)
+>
 >- **dynamically typed**: Type errors are only detected when expressions are evaluated.
 
 ---
 
 Before we dive into derivations, let's cover some key language features
-that are essential for understanding Nix expressions and flakes.
+that are essential for understanding Nix expressions.
 
 ---
 
@@ -66,7 +88,16 @@ They're defined using curly braces:
    in with set; a + b  # Returns 3
    ```
 
-## Functions
+## Function Application
+
+   Functions are called by putting the argument after the function,
+  separated by a space:
+
+   ```nix
+   isNull null  # Returns true
+   ```
+
+## Function Definition
 
    Functions are defined using a colon. The syntax is `argument: body`
 
@@ -92,10 +123,7 @@ They're defined using curly braces:
    Calling this function with no arguments will return `15` because `x`
   defaults to `10`.
 
-## Function Application
-
-   Functions are called by putting the argument after the function,
-  separated by a space:
+## Function Application (user defined function)
 
    ```nix
    (x: x + 1) 5  # Returns 6
@@ -123,7 +151,7 @@ They're defined using curly braces:
 ## Importing `nixpkgs`
 
    The expression `<nixpkgs>` is a shorthand to refer to the Nix Packages
-  collection (it's a path)
+  collection (it's a path, depends on how you installed nix)
 
    ```nix
    let
@@ -131,6 +159,8 @@ They're defined using curly braces:
    in
      pkgs.hello  # Refers to the 'hello' package from nixpkgs
    ```
+
+If `nixpkgs` "points to master", it's literally [this](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/he/hello/package.nix)
 
 ## Using Import with Default Arguments
 
@@ -142,11 +172,17 @@ They're defined using curly braces:
   Useful to override the pkgs (e.g. pin to a specific version,
   different from the default one)
 
-# Derivation
+--
+>
+>- Ok, now what? We use the **nix language** _mostly_ to produce *derivations*
+
+# Derivations
 
 The core building block that describes how to build a software component.
 It's a low-level, immutable representation of a build process, which tells Nix exactly
 what to do to produce a specific output.
+
+**TL;DR: a derivation is a build plan.**
 
 ## A very simple derivation
 
@@ -158,23 +194,30 @@ pkgs.stdenv.mkDerivation {
   src = ./.;
   installPhase = ''
     mkdir $out
+    echo "42" > $out/output
   '';
 }
 ```
 
 ---
 
+## Store derivation
+
+A `derivation` can be instantiated, it became a **store derivation**
+
 To build this derivation, you would use the command:
 
 ```bash
-nix-build simple.nix
+nix-instantiate simple.nix
 ```
 
 ```text
+
 ...
 this derivation will be built:
-  /nix/store/ymf3swd54jlji0z3a0qbw1f9rxl4cgc2-simple.drv
+  /nix/store/{SOME-HASH}-simple.drv
 ...
+
 ```
 
 ---
@@ -182,55 +225,57 @@ this derivation will be built:
 We can navigate inspect a derivation:
 
 ```bash
-nix derivation show /nix/store/ymf3swd54jlji0z3a0qbw1f9rxl4cgc2-simple.drv \
-| jq '."/nix/store/ymf3swd54jlji0z3a0qbw1f9rxl4cgc2-simple.drv"'
+nix derivation show   /nix/store/{SOME-HASH}-simple.drv
 ```
 
-## The `.drv` File
+## The `.drv` File (1/2)
 
 A `.drv` file contains:
 
 - **Build Instructions**: How to fetch, unpack, build, and install the package.
 - **Dependencies**: The dependencies required for the build, including other
 packages and build tools.
+
+## The `.drv` File (2/2)
+
 - **Source Information**: Where to find the source code or files needed for
 the build.
 - **Phases**: Various build phases like `unpackPhase`, `patchPhase`, `buildPhase`,
-`installPhase`, etc.
+`installPhase`, etc;
 - **Output Paths**: Paths where the build outputs are placed in the Nix store.
-- ... other "less interesting" things
+- ... other "less interesting" things.
 
-## Derivation path
+## Store Derivation Path
 
 ```bash
 /nix/store/<hash>-<name>
 ```
 
-The `<hash>` part of the path is derived from multiple inputs that make up the derivation.
-This ensures that the derivation is deterministic,
-meaning that if all inputs are the same, the resulting derivation will have the same hash
-and the same store path.
+The `hash` in the path is generated from the various inputs that make up the derivation.
+This ensures determinism, meaning that if all inputs remain unchanged, the resulting derivation
+will always produce the same hash and store path.
 
----
+--
 
-### The `<hash>` is based on: (1/2)
+This approach is highly powerful, as it enables the use of caches and substitutes,
+allowing pre-built derivations to be shared and reused, significantly improving build efficiency.
 
-- **Source code or inputs**: This includes the source files or URLs used to build the derivation.
-- **Build instructions**: The Nix expression itself (the contents of the default.nix or similar)
-that specifies how to build the derivation, including all phases like configurePhase, buildPhase,
- and installPhase.
-- **Build environment**: This includes the specific versions of the dependencies, compilers, and
-libraries used to build the derivation. Even slight changes in the environment
-(e.g., different versions of dependencies) will result in a different hash.
+## Derivation realisation
 
----
+nix-store --realise /nix/store/{SOME-HASH}-simple.drv
 
-### The `<hash>` is based on: (2/2)
+```bash
+/nix/store/<hash>-<name>
+```
 
-- **System architecture**: The architecture (e.g., x86_64-linux, aarch64-linux) also affects the
-hash since different architectures may have different outputs.
-- **Nixpkgs revision**: The exact version or revision of the nixpkgs repository
-(or any other repository) used in the build also influences the hash.
+## Shortcut & Summary: nix-build
+
+`nix-build` does:
+
+- Instantiation: The .nix file is instantiated into a store derivation (.drv).
+- Realization: The .drv is then realized into the actual build output, based on its defined outputs
+  (e.g., outputs.out.path).
+- A symbolic link ~./result~ is created, pointing to the path of the realized output.
 
 ## Note
 
@@ -248,16 +293,14 @@ hash since different architectures may have different outputs.
 Here's an example of a simple derivation that compiles a C program:
 
 ```nix
-# hello.nic
+# hello.nix
 { pkgs ? import <nixpkgs> { } }:
 pkgs.stdenv.mkDerivation {
   name = "hello";
   src = ./src;
-  # TODO why don't I have to import GCC here?
-  # TODO add build inputs
 
   buildPhase = ''
-    gcc $src/hello.c -o ./hello
+    rustc $src/rust.rs -o ./hello
   '';
   installPhase = ''
     mkdir -p $out/bin
@@ -297,124 +340,52 @@ For example, the Umoria package in nixpkgs can be examined and built with the fo
 ```bash
 nix derivation show nixpkgs#sl
 nix build nixpkgs#sl -L --rebuild
+
 ```
 
 # Nix Store
 
-![Nix Store](./pics/store.webp)
+![Nix Store](./pics/store.webp){ width=40\% }
 
 ## Nix Store
 
-The Nix store is a crucial component of the Nix package manager. Its primary purpose is to store
-both the derivation files (`.drv`) and their output artifacts.
-These outputs are stored in a deterministic manner, meaning that the same input
-will always produce the same output path.
+Its primary purpose is to store both the derivation files (`.drv`) and their output artifacts.
 
 - **Location**: The Nix store is located at `/nix/store`.
 - **Immutability**: Once a derivation is built and stored in the Nix store, it never changes.
 - **Accessibility**: The store is readable by all users, allowing for shared access.
 
-# Caches (TODO)
+# Caches
 
-Caches (or **substituters**) play a vital role in speeding up the build process in Nix. Before Nix
-builds a derivation, it checks the cache to see if the output already exists. If it does, Nix can
-download the output directly from the cache instead of rebuilding it.
+Before Nix `realise` a derivation, it checks the cache to see if the output already exists.
+If it does, Nix can download the output directly from the cache instead of rebuilding it.
 
 ---
 
-![Caches are Fast](./pics/caches-are-fast.png)
+![](./pics/caches-are-fast.png){ width=40\% }
 
 # NixOS
 
 What if the entire operating system was the output of a derivation?
-This is the idea behind NixOS, where everything from the kernel to user applications is managed
-by Nix, ensuring that the system is fully reproducible and easily configurable.
-
-# TODO: Flakes
-
-![Flakes](./pics/fleyks.png)
+NixOS is a basically a big configuration file (`.nix`) that _evaluates_ to a a big derivation that
+build a Linux disto (plus some symbolic links that enables easy rollbacks).
 
 ## What Are Flakes?
 
-Flakes are an experimental feature in Nix that introduces a more structured and reliable way to
-manage Nix projects. They enforce purity by restricting access to paths outside the Nix store,
-making builds more reproducible. Flakes provide a standard way to declare dependencies and interact
-with them, and they are expected to become the standard in future versions of Nix.
+![](./pics/fleyks.png){ width=60\% }
 
-## Simplest Possible Flake
+## What Are Flakes?
 
-Let's build the simplest possible flake:
+>- introduce more structured and reliable way to manage Nix projects
+>- are an experimental feature
+>- are expected to become the standard in future versions of Nix
 
-```nix
-{
-  description = "A simple example flake";
+# How this relate to notious
 
-  # Defines the checks run by `nix flake check`
-  checks = {
-    default = {
-      # A dummy check that always passes
-      inherit self;
-    };
-  };
+- nix-shell: spawn a shell with all tooling in the path
+- home-manager
 
-  # Defines the packages that can be built with `nix build .#default`
-  packages = {
-    default = derivation {
-      name = "example";
-      builder = "bash";
-      args = [ "-c" "echo Hello, World!" ];
-    };
-  };
-}
-```
-
-## More Elaborate Flake Example
-
-Here’s a more elaborate flake example with comments:
-
-```nix
-{
-  description = "An advanced example flake";
-
-  # Dependencies and inputs for the flake
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-  };
-
-  outputs = { self, nixpkgs, ... }:
-  {
-    # Checks that are run with `nix flake check`
-    checks.x86_64-linux.hello = nixpkgs.lib.mkDerivation {
-      pname = "hello";
-      version = "2.10";
-      src = self;
-      buildInputs = [ nixpkgs.hello ];
-    };
-
-    # A package that can be built with `nix build .#hello`
-    packages.x86_64-linux.hello = nixpkgs.lib.mkDerivation {
-      pname = "hello";
-      version = "2.10";
-      src = self;
-      buildInputs = [ nixpkgs.hello ];
-    };
-
-    # An app that can be run with `nix run .#hello`
-    apps.x86_64-linux.hello = {
-      type = "app";
-      program = "${self.packages.x86_64-linux.hello}/bin/hello";
-    };
-  };
-}
-```
-
-In this example:
-
-- **Inputs**: The `inputs` section specifies external dependencies, like nixpkgs.
-- **Outputs**: The `outputs` section defines checks, packages, and apps that are part of the flake.
- These are built and run using the corresponding Nix commands.
-
-# TODO Use cases
+# Killer Use Uses
 
 ## Dev Shells
 
