@@ -1,27 +1,26 @@
 # Nix: from zero to something
 
-![](./pics/the-declarative-trinity.png){ width=40\% }
+![](./pics/the-declarative-trinity.png)
 
 ---
 
 ## Table of Contents
 
 1. Disclaimer
-2. Use Cases (to Grab Your Attention)
+2. Use Cases (to grab your attention)
 3. Nix Language
 4. Derivations
-5. The Nix Store
+5. The nix store
 6. Flakes (short intro)
 7. Killer Use Cases
 
 # Disclaimer
 
->- I'm not sure this approach/TOC works
 >- This demo is "from first principles", it might sound slow
 >- I'm not an expert
 >- If anything is not clear, please interrupt me
->- This starts from a fork: <https://github.com/aciceri/nixos-devops-talk>
->- Yes, you can use Nix in MacOS and WSL2: <https://nixos.org/download/>
+>- I'm not sure this approach/TOC works
+>- This is from a fork: <https://github.com/aciceri/nixos-devops-talk>
 
 # Some use cases
 
@@ -29,21 +28,18 @@
 >- Contribute on projects without polluting system with project-specific tooling: [awesome-italia-opensource](https://github.com/albertodvp/awesome-italia-opensource?tab=readme-ov-file)
 >- [Nixos configuration](https://github.com/albertodvp/nixos-dotfiles)
 
-# Nix as a Language (1/3)
+# Nix as a Language
 
 >- **declarative**: There is no notion of executing sequential steps.
 Dependencies between operations are established only through data.
 >- **pure**: Values cannot change during computation.
 Functions always produce the same output if their input does not change.
-
-## Nix as a Language (2/3)
-
 >- **functional**: Functions are like any other value.
 Functions can be assigned to names, taken as arguments, or returned by functions.
->- **lazy**: Values are only computed when they are needed.
 
-## Nix as a Language (3/3)
->
+---
+
+>- **lazy**: Values are only computed when they are needed.
 >- **dynamically typed**: Type errors are only detected when expressions are evaluated.
 
 ---
@@ -172,9 +168,13 @@ If `nixpkgs` "points to master", it's literally [this](https://github.com/NixOS/
   Useful to override the pkgs (e.g. pin to a specific version,
   different from the default one)
 
---
->
->- Ok, now what? We use the **nix language** _mostly_ to produce *derivations*
+---
+
+Ok, boring... now what?
+
+---
+
+We use the **nix language** _mostly_ to produce *derivations*
 
 # Derivations
 
@@ -203,7 +203,7 @@ pkgs.stdenv.mkDerivation {
 
 ## Store derivation
 
-A `derivation` can be instantiated, it became a **store derivation**
+A **derivation** can be _instantiated_, it became a **store derivation**
 
 To build this derivation, you would use the command:
 
@@ -225,7 +225,7 @@ this derivation will be built:
 We can navigate inspect a derivation:
 
 ```bash
-nix derivation show   /nix/store/{SOME-HASH}-simple.drv
+nix derivation show /nix/store/{SOME-HASH}-simple.drv
 ```
 
 ## The `.drv` File (1/2)
@@ -255,7 +255,7 @@ The `hash` in the path is generated from the various inputs that make up the der
 This ensures determinism, meaning that if all inputs remain unchanged, the resulting derivation
 will always produce the same hash and store path.
 
---
+---
 
 This approach is highly powerful, as it enables the use of caches and substitutes,
 allowing pre-built derivations to be shared and reused, significantly improving build efficiency.
@@ -345,7 +345,7 @@ nix build nixpkgs#sl -L --rebuild
 
 # Nix Store
 
-![Nix Store](./pics/store.webp){ width=40\% }
+![Nix Store](./pics/store.webp)
 
 ## Nix Store
 
@@ -362,7 +362,7 @@ If it does, Nix can download the output directly from the cache instead of rebui
 
 ---
 
-![](./pics/caches-are-fast.png){ width=40\% }
+![](./pics/caches-are-fast.png)
 
 # NixOS
 
@@ -372,7 +372,7 @@ build a Linux disto (plus some symbolic links that enables easy rollbacks).
 
 ## What Are Flakes?
 
-![](./pics/fleyks.png){ width=60\% }
+![](./pics/fleyks.png)
 
 ## What Are Flakes?
 
@@ -402,3 +402,12 @@ eliminating “it works on my machine” issues.
 are consistent and reliable, leading to more accurate testing and integration results.
 >- **Efficient Caching**: Reproducible builds enable the use of caching mechanisms to speed up
 development.
+
+## From here
+
+Some ideas of what we could do:
+
+>- let's install nix on your machine (nix is supported for macOS and WSL2 too)
+>- let's nixify your project (build your code, setup a developer environment, ...)
+>- let's convince your company that nix will make it save money (onboarding, reproducibility, ...)
+>- try conving me nix is not the solution for everything
