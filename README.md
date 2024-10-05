@@ -174,7 +174,7 @@ Ok, boring... now what?
 
 ---
 
-We use the **nix language** _mostly_ to produce *derivations*
+We use the **nix language** _mostly_ to produce _derivations_
 
 # Derivations
 
@@ -251,31 +251,26 @@ the build.
 /nix/store/<hash>-<name>
 ```
 
-The `hash` in the path is generated from the various inputs that make up the derivation.
-This ensures determinism, meaning that if all inputs remain unchanged, the resulting derivation
-will always produce the same hash and store path.
-
----
-
-This approach is highly powerful, as it enables the use of caches and substitutes,
-allowing pre-built derivations to be shared and reused, significantly improving build efficiency.
+>- The `hash` in the path is generated from the various inputs that make up the derivation.
+If all inputs remain unchanged, the resulting derivation will always produce the **same hash** and
+**store path**.
+>- This approach is highly powerful, as it enables the use of **caches** and substitutes,
+allowing **pre-built** derivations to be shared and reused, significantly improving build efficiency.
 
 ## Derivation realisation
 
-nix-store --realise /nix/store/{SOME-HASH}-simple.drv
-
 ```bash
-/nix/store/<hash>-<name>
+nix-store --realise /nix/store/{SOME-HASH}-simple.drv
 ```
 
 ## Shortcut & Summary: nix-build
 
 `nix-build` does:
 
-- Instantiation: The .nix file is instantiated into a store derivation (.drv).
-- Realization: The .drv is then realized into the actual build output, based on its defined outputs
+- **Instantiation**: The .nix file is instantiated into a store derivation (.drv).
+- **Realization**: The .drv is then realized into the actual build output, based on its defined outputs
   (e.g., outputs.out.path).
-- A symbolic link ~./result~ is created, pointing to the path of the realized output.
+- A **symbolic link** ~./result~ is created, pointing to the path of the realized output.
 
 ## Note
 
@@ -309,6 +304,8 @@ pkgs.stdenv.mkDerivation {
 }
 ```
 
+Something is missing here...
+
 ---
 
 ## What are `$src` and `$out`?
@@ -327,15 +324,14 @@ If the derivation depends on other derivations, these are built first.
 
 ## Building the Derivation (from nixpkgs)
 
-Nixpkgs is a vast repository that contains derivations for most of the software packages
- you might need. It's the primary package collection used by Nix and NixOS, offering a wide
+>- Nixpkgs is a vast repository that contains derivations for most of the software packages
+ you might need.
+>- It's the primary package collection used by Nix and NixOS, offering a wide
 variety of software from simple utilities to complex applications.
-Each package in nixpkgs is represented by a derivation, which defines how the package
-is built and configured.
 
 ---
 
-For example, the Umoria package in nixpkgs can be examined and built with the following commands:
+For example, the sl package in nixpkgs can be examined and built with the following commands:
 
 ```bash
 nix derivation show nixpkgs#sl
@@ -370,7 +366,14 @@ What if the entire operating system was the output of a derivation?
 NixOS is a basically a big configuration file (`.nix`) that _evaluates_ to a a big derivation that
 build a Linux disto (plus some symbolic links that enables easy rollbacks).
 
-## What Are Flakes?
+---
+
+# Problems
+
+>- Everyone writes nix expressions as they want
+>- nixpkgs (inputs in general) are not pinned
+
+# What Are Flakes?
 
 ![](./pics/fleyks.png)
 
@@ -380,10 +383,43 @@ build a Linux disto (plus some symbolic links that enables easy rollbacks).
 >- are an experimental feature
 >- are expected to become the standard in future versions of Nix
 
-# How this relate to notious
+```bash
+ --experimental-features 'nix-command flakes'
+```
 
-- nix-shell: spawn a shell with all tooling in the path
-- home-manager
+---
+
+```nix
+{ self, ... }@inputs:
+{
+  # Executed by `nix flake check`
+  checks."<system>"."<name>" = derivation;
+
+  # Executed by `nix build .#<name>`
+  packages."<system>"."<name>" = derivation;
+
+  # Executed by `nix build .`
+  packages."<system>".default = derivation;
+
+  # Executed by `nix run .#<name>`
+  apps."<system>"."<name>" = {
+    type = "app";
+    program = "<store-path>";
+  };
+
+  # Executed by `nix run . -- <args?>`
+  apps."<system>".default = { type = "app"; program = "..."; };
+
+  # Formatter (alejandra, nixfmt or nixpkgs-fmt)
+  formatter."<system>" = derivation;
+
+  # Used by `nix develop .#<name>`
+  devShells."<system>"."<name>" = derivation;
+
+  # Used by `nix develop`
+  devShells."<system>".default = derivation;
+}
+```
 
 # Killer Use Uses
 
